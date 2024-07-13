@@ -7,7 +7,7 @@ mpd client with winamp skin support
 
 ```python -m venv --upgrade-deps venv```
 
-```source venve/bin/activate```
+```source venv/bin/activate```
 
 ```pip install -r requirements.txt```
 
