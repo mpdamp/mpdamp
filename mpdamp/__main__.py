@@ -12,7 +12,7 @@ class Skin():
         self.logger.debug('__init__()')
 
         self.images = {}
-        for k in ['MAIN.BMP', 'TITLEBAR.BMP', 'EQMAIN.BMP', 'PLEDIT.BMP']:
+        for k in ['MAIN.BMP', 'TITLEBAR.BMP', 'EQMAIN.BMP', 'PLEDIT.BMP', 'CBUTTONS.BMP']:
             self.images[k] = wx.Image(os.path.join(path, name, k), wx.BITMAP_TYPE_BMP).ConvertToBitmap()
         
     def get_main(self) -> wx.Image:
@@ -38,6 +38,26 @@ class Skin():
     def get_pl(self) -> wx.Image:
         """Get the playlsit image"""
         return self.images['PLEDIT.BMP'].GetSubBitmap(wx.Rect(26, 0, 100, 20))
+    
+    def get_transport_prev(self) -> wx.Image:
+        """Get the transport button prev"""
+        return self.images['CBUTTONS.BMP'].GetSubBitmap(wx.Rect(0, 0, 22, 18))
+    
+    def get_transport_play(self) -> wx.Image:
+        """Get the transport button play"""
+        return self.images['CBUTTONS.BMP'].GetSubBitmap(wx.Rect(23, 0, 22, 18))
+    
+    def get_transport_pause(self) -> wx.Image:
+        """Get the transport button pause"""
+        return self.images['CBUTTONS.BMP'].GetSubBitmap(wx.Rect(46, 0, 22, 18))
+    
+    def get_transport_stop(self) -> wx.Image:
+        """Get the transport button stop"""
+        return self.images['CBUTTONS.BMP'].GetSubBitmap(wx.Rect(69, 0, 22, 18))
+    
+    def get_transport_next(self) -> wx.Image:
+        """Get the transport button next"""
+        return self.images['CBUTTONS.BMP'].GetSubBitmap(wx.Rect(92, 0, 22, 18))
 
 class MpdAmp(wx.Frame):
     """The base MpdAmp window"""
@@ -78,6 +98,12 @@ class MpdAmpMain(MpdAmp):
 
         main = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_main(), size=(275,116), pos=(0,0))
         titlebar = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_main_titlebar_active(), size=(275,14), pos=(0,0))
+
+        prev = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_transport_prev(), size=(22, 18), pos=(15, 87))
+        play = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_transport_play(), size=(22, 18), pos=(37, 87))
+        pause = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_transport_pause(), size=(22, 18), pos=(59, 87))
+        stop = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_transport_stop(), size=(22, 18), pos=(81, 87))
+        next = wx.StaticBitmap(panel, wx.ID_ANY, self.skin.get_transport_next(), size=(22, 18), pos=(103, 87))
 
         self.eq = MpdAmpEq(self, self, title='MpdAmpEq', size=(275,116), style=wx.NO_BORDER)
         self.pl = MpdAmpPlaylist(self, self, title='MpdAmpPlaylist', size=(275,116), style=wx.NO_BORDER)
