@@ -41,11 +41,13 @@ class Skin():
 
 class MpdAmp(wx.Frame):
     """The base MpdAmp window"""
-    def __init__(self, *args, **kw):
+    def __init__(self, has_iconise: bool, *args, **kw):
         wx.Frame.__init__(self, *args, **kw)
         
         self.logger = logging.getLogger(type(self).__name__)
         self.logger.debug('__init__()')
+
+        self.has_iconise = has_iconise
 
     def snap_to(self, other: wx.Frame) -> None:
         snap_distance = 5
@@ -58,10 +60,17 @@ class MpdAmp(wx.Frame):
             self_pos.x = other_snap.x
         self.SetPosition(self_pos)
 
+    def mouse_up(self, event: wx.MouseEvent) -> None:
+        self.rel_position = None
+        event.Skip()
+
+    def shade(self) -> None:
+        self.logger.debug('shade()')
+
 class MpdAmpMain(MpdAmp):
     """The Main MpdAmp window"""
     def __init__(self, *args, **kw):
-        MpdAmp.__init__(self, *args, **kw)
+        MpdAmp.__init__(self, True, *args, **kw)
 
         panel = wx.Panel(self, size=(275,116))
 
@@ -96,13 +105,6 @@ class MpdAmpMain(MpdAmp):
             self.eq_position = self.Position - self.eq.Position
             self.pl_position = self.Position - self.pl.Position
         event.Skip()
-
-    def shade(self) -> None:
-        self.logger.debug('shade()')
-
-    def mouse_up(self, event: wx.MouseEvent) -> None:
-        self.rel_position = None
-        event.Skip()
         
     def mouse_motion(self, event: wx.MouseEvent) -> None:
         if event.Dragging():
@@ -122,7 +124,7 @@ class MpdAmpMain(MpdAmp):
 class MpdAmpEq(MpdAmp):
     """The EQ MpdAmp window"""
     def __init__(self, main, *args, **kw):
-        MpdAmp.__init__(self, *args, **kw)
+        MpdAmp.__init__(self, False, *args, **kw)
 
         self.main = main
 
@@ -148,13 +150,6 @@ class MpdAmpEq(MpdAmp):
         else:
             self.rel_position = event.Position
         event.Skip()
-
-    def shade(self) -> None:
-        self.logger.debug('shade()')
-
-    def mouse_up(self, event: wx.MouseEvent) -> None:
-        self.rel_position = None
-        event.Skip()
         
     def mouse_motion(self, event: wx.MouseEvent) -> None:
         if event.Dragging():
@@ -171,7 +166,7 @@ class MpdAmpEq(MpdAmp):
 class MpdAmpPlaylist(MpdAmp):
     """The Playlist MpdAmp window"""
     def __init__(self, main, *args, **kw):
-        MpdAmp.__init__(self, *args, **kw)
+        MpdAmp.__init__(self, False, *args, **kw)
 
         self.main = main
 
@@ -196,13 +191,6 @@ class MpdAmpPlaylist(MpdAmp):
             self.shade()
         else:
             self.rel_position = event.Position
-        event.Skip()
-
-    def shade(self) -> None:
-        self.logger.debug('shade()')
-
-    def mouse_up(self, event: wx.MouseEvent) -> None:
-        self.rel_position = None
         event.Skip()
         
     def mouse_motion(self, event: wx.MouseEvent) -> None:
