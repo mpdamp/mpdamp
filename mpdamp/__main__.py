@@ -12,7 +12,7 @@ class Skin():
         self.logger.debug('__init__()')
 
         self.images = {}
-        for k in ['MAIN.BMP', 'TITLEBAR.BMP', 'EQMAIN.BMP']:
+        for k in ['MAIN.BMP', 'TITLEBAR.BMP', 'EQMAIN.BMP', 'PLEDIT.BMP']:
             self.images[k] = wx.Image(os.path.join(path, name, k), wx.BITMAP_TYPE_BMP).ConvertToBitmap()
         
     def get_main(self) -> wx.Image:
@@ -35,13 +35,33 @@ class Skin():
         """Get the eq titlebar in active state"""
         return self.images['EQMAIN.BMP'].GetSubBitmap(wx.Rect(0, 135, 275, 14))
 
-class MpdAmpMain(wx.Frame):
-    """The Main MpdAmp window"""
+    def get_pl(self) -> wx.Image:
+        """Get the playlsit image"""
+        return self.images['PLEDIT.BMP'].GetSubBitmap(wx.Rect(26, 0, 100, 20))
+
+class MpdAmp(wx.Frame):
+    """The base MpdAmp window"""
     def __init__(self, *args, **kw):
         wx.Frame.__init__(self, *args, **kw)
-
+        
         self.logger = logging.getLogger(type(self).__name__)
         self.logger.debug('__init__()')
+
+    def snap_to(self, other: wx.Frame) -> None:
+        snap_distance = 5
+        other_pos = other.Position
+        other_snap = other_pos + (0, other.Size.y)
+        self_pos = self.Position
+        if (other_snap.y - self_pos.y) < snap_distance and (other_snap.y - self_pos.y) > -snap_distance:
+            self_pos.y = other_snap.y
+        if (other_snap.x - self_pos.x) < snap_distance and (other_snap.x - self_pos.x) > -snap_distance:
+            self_pos.x = other_snap.x
+        self.SetPosition(self_pos)
+
+class MpdAmpMain(MpdAmp):
+    """The Main MpdAmp window"""
+    def __init__(self, *args, **kw):
+        MpdAmp.__init__(self, *args, **kw)
 
         panel = wx.Panel(self, size=(275,116))
 
@@ -87,18 +107,22 @@ class MpdAmpMain(wx.Frame):
     def mouse_motion(self, event: wx.MouseEvent) -> None:
         if event.Dragging():
             #self.logger.debug('Drag position %s' % event.Position)
-            self.SetPosition(self.Position+event.Position-self.rel_position)
-            self.eq.SetPosition(self.Position-self.eq_position)
-            self.pl.SetPosition(self.Position-self.pl_position)
+            main_pos = self.Position+event.Position-self.rel_position
+            self.SetPosition(main_pos)
+            
+            #TODO: only move children if they are connected/touching
+
+            eq_pos = self.Position-self.eq_position
+            self.eq.SetPosition(eq_pos)
+            
+            pl_pos = self.Position-self.pl_position
+            self.pl.SetPosition(pl_pos)
         event.Skip()
 
-class MpdAmpEq(wx.Frame):
+class MpdAmpEq(MpdAmp):
     """The EQ MpdAmp window"""
     def __init__(self, main, *args, **kw):
-        wx.Frame.__init__(self, *args, **kw)
-
-        self.logger = logging.getLogger(type(self).__name__)
-        self.logger.debug('__init__()')
+        MpdAmp.__init__(self, *args, **kw)
 
         self.main = main
 
@@ -135,29 +159,32 @@ class MpdAmpEq(wx.Frame):
     def mouse_motion(self, event: wx.MouseEvent) -> None:
         if event.Dragging():
             #self.logger.debug('Drag position %s' % event.Position)
-            self.SetPosition(self.Position+event.Position-self.rel_position)
+
+            eq_pos = self.Position+event.Position-self.rel_position
+            self.SetPosition(eq_pos)
+
+            self.snap_to(self.main)
+            
+            self.snap_to(self.main.pl)
         event.Skip()
 
-class MpdAmpPlaylist(wx.Frame):
+class MpdAmpPlaylist(MpdAmp):
     """The Playlist MpdAmp window"""
     def __init__(self, main, *args, **kw):
-        wx.Frame.__init__(self, *args, **kw)
-
-        self.logger = logging.getLogger(type(self).__name__)
-        self.logger.debug('__init__()')
+        MpdAmp.__init__(self, *args, **kw)
 
         self.main = main
 
         panel = wx.Panel(self, size=(275,116))
 
-        #main = wx.StaticBitmap(panel, wx.ID_ANY, self.main.skin.get_eq(), size=(275,116), pos=(0,0))
+        main = wx.StaticBitmap(panel, wx.ID_ANY, self.main.skin.get_pl(), size=(100,20), pos=(0,0))
         #titlebar = wx.StaticBitmap(panel, wx.ID_ANY, self.main.skin.get_eq_titlebar_active(), size=(275,14), pos=(0,0))
 
         self.rel_position = None
 
-        #main.Bind(wx.EVT_LEFT_DOWN, self.mouse_down)
-        #main.Bind(wx.EVT_LEFT_UP, self.mouse_up)
-        #main.Bind(wx.EVT_MOTION, self.mouse_motion)
+        main.Bind(wx.EVT_LEFT_DOWN, self.mouse_down)
+        main.Bind(wx.EVT_LEFT_UP, self.mouse_up)
+        main.Bind(wx.EVT_MOTION, self.mouse_motion)
 
     def mouse_down(self, event: wx.MouseEvent) -> None:
         #self.logger.debug('Event position %s' % event.Position)
@@ -181,7 +208,13 @@ class MpdAmpPlaylist(wx.Frame):
     def mouse_motion(self, event: wx.MouseEvent) -> None:
         if event.Dragging():
             #self.logger.debug('Drag position %s' % event.Position)
-            self.SetPosition(self.Position+event.Position-self.rel_position)
+
+            pl_pos = self.Position+event.Position-self.rel_position
+            self.SetPosition(pl_pos)
+
+            self.snap_to(self.main)
+            
+            self.snap_to(self.main.eq)
         event.Skip()
 
 # TODO: abstract common window code
